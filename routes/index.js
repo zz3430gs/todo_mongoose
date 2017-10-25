@@ -1,0 +1,63 @@
+var express = require('express');
+var ObjectID = require('mongodb').ObjectID;
+
+var router = express.Router();
+
+/* GET home page with all incomplete tasks. */
+router.get('/', function(req, res, next) {
+
+  req.tasks.find({completed:false}).toArray().then((docs) =>{
+    res.render('index', {title: 'Incomplete Tasks', tasks: docs})
+}).catch((err)=>{
+  next(err); //to the error handler
+});
+});
+
+/* POST new task */
+router.post('/add', function (req, res, next) {
+    if (!req.body || !req.body.text){
+      //no task text info, ignore and redirect to home page
+      res.redirect('/');
+    }
+    else{
+      //Insert into database. New task are assumed to be not complete
+      req.tasks.insertOne({text: req.body.text, completed: false})
+        .then(()=>{
+          res.redirect('/');
+        })
+        .catch((err)=>{
+          next(err); //most likely to be a database error
+        });
+    }
+});
+
+/* POST task done */
+router.post('/done', function (req, res, next) {
+  req.tasks.findOneAndUpdate({_id: ObjectID(req.body._id)}, {$set : {completed: true}})
+  .then((result)=>{
+    //count how many things were updated. Expect to be 1.
+    if (result.lastErrorObject.n === 1){
+      res.redirect('/');
+    }else {
+        //the task was not found. Report 404 error
+        var notFound = Error('Task not found');
+        notFound.status = 404;
+        next(notFound);
+    }})
+    .catch((err)=>{
+      next(err);  //For database errors, or malformed ObjectIDs.
+    });
+});
+
+/* GET completed tasks */
+ router.get('/completed', function (req, res, next) {
+
+   req.tasks.find({completed:true}).toArray()
+       .then((docs)=>{
+       res.render('tasks_completed', {title: 'Completed tasks', tasks : docs});
+     }).catch((err)=>{
+     next(err);
+   });
+
+ });
+module.exports = router;
