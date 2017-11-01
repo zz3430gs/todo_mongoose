@@ -1,1 +1,7 @@
 node_modules
+node_modules/connect-flash/
+node_modules/crc/
+node_modules/express-flash/
+node_modules/express-session/
+node_modules/random-bytes/
+node_modules/uid-safe/
