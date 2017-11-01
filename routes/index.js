@@ -17,6 +17,7 @@ router.get('/', function(req, res, next) {
 router.post('/add', function (req, res, next) {
     if (!req.body || !req.body.text){
       //no task text info, ignore and redirect to home page
+        req.flash('error', 'please enter a task');
       res.redirect('/');
     }
     else{
@@ -33,20 +34,27 @@ router.post('/add', function (req, res, next) {
 
 /* POST task done */
 router.post('/done', function (req, res, next) {
-  req.tasks.findOneAndUpdate({_id: ObjectID(req.body._id)}, {$set : {completed: true}})
-  .then((result)=>{
-    //count how many things were updated. Expect to be 1.
-    if (result.lastErrorObject.n === 1){
-      res.redirect('/');
-    }else {
-        //the task was not found. Report 404 error
-        var notFound = Error('Task not found');
+    var _id = req.body._id;
+    if (!ObjectID.isValid(_id)){
+        var notFound = Error('Not found');
         notFound.status = 404;
         next(notFound);
-    }})
-    .catch((err)=>{
-      next(err);  //For database errors, or malformed ObjectIDs.
-    });
+    }else {
+        req.tasks.findOneAndUpdate({_id: ObjectID(req.body._id)}, {$set : {completed: true}})
+            .then((result)=>{
+                //count how many things were updated. Expect to be 1.
+                if (result.lastErrorObject.n === 1){
+                    res.redirect('/');
+                }else {
+                    //the task was not found. Report 404 error
+                    var notFound = Error('Task not found');
+                    notFound.status = 404;
+                    next(notFound);
+                }})
+            .catch((err)=>{
+                next(err);  //For database errors, or malformed ObjectIDs.
+            });
+    }
 });
 
 /* GET completed tasks */
@@ -60,4 +68,68 @@ router.post('/done', function (req, res, next) {
    });
 
  });
+
+ /* POST task delete */
+ router.post('/delete', function(req, res, next){
+
+     var _id = req.body._id;
+
+     if (!ObjectID.isValid(_id)){
+         var notFound = Error('Not found');
+         notFound.status = 404;
+         next(notFound);
+     }else {
+         req.tasks.findOneAndDelete({_id : ObjectID(req.body._id)})
+             .then((result)=>{
+                 if (result.lastErrorObject.n === 1){
+                     res.redirect('/');
+                 }else {
+                     var notFound = Error('task not found');
+                     notFound.status = 404;
+                     next(notFound);
+                 }
+             })
+             .catch((err) => {
+                 next(err);
+             });
+     }
+ });
+
+ /* POST all tasks done */
+router.post('/alldone', function (req, res, next) {
+
+    req.tasks.updateMany({completed : false}, {$set: {completed: true}})
+        .then((result) => {
+        res.redirect('/');
+        })
+        .catch((err) =>{
+        next(err);
+        })
+});
+
+/* GET details about one task */
+router.get('/task/:_id', function(req, res, next){
+
+    var _id = req.params._id;
+
+    if (!ObjectID.isValid(_id)){
+        var notFound = Error('Not found');
+        notFound.status = 404;
+        next(notFound);
+    }else {
+        req.tasks.findOne({_id : ObjectID(_id)})
+            .then((doc) =>{
+                if (doc == null){
+                    var notFound = Error('Not Found');
+                    notFound.status = 404;
+                    next(notFound);
+                }else {
+                    res.render('task', {title: "Task", task : doc});
+                }
+            })
+            .catch((err) =>{
+                next(err);
+            })
+    }
+});
 module.exports = router;

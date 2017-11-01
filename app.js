@@ -4,6 +4,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var flash = require('express-flash');
+var session = require('express-session');
+
 var MongoClient = require('mongodb').MongoClient;
 
 var index = require('./routes/index');
@@ -23,6 +26,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(session({secret: 'top secret', resave : false, saveUninitialized: false}));
+app.use(flash());
 
 MongoClient.connect(db_url).then( (db) => {
 
