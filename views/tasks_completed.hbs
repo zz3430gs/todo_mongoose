@@ -1,7 +1,13 @@
 <div class="tasklist">
     {{#each tasks}}
-        <li>{{this.text}}</li>
+        <li>{{this.text}} {{this.dateCreated}} {{this.dateCompleted}}</li>
     {{else}}
         <p>No tasks have been completed!</p>
     {{/each}}
+</div>
+<div class="deleteDone">
+    <form action="/deletedone" method="POST">
+        <input type="hidden" name="_id" value="{{this._id}}">
+        <input class="deleteDone_button" type="submit" name="deleteDone" value="Delete Done Task">
+    </form>
 </div>

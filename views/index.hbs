@@ -13,7 +13,7 @@
 
 <div class="tasklist">
     {{#each tasks}}
-        <p>{{@index}}: <a href="task/{{this._id}}"></a> {{this.text}}</p>
+        <p>{{@index}}: <a href="task/{{this._id}}"></a> {{this.text}} {{this.dateCreated}}</p>
 
         <form action="/done" method="POST" class="done_form">
             <input type="hidden" name="_id" value="{{this._id}}">
@@ -28,6 +28,10 @@
     {{else}}
         <p>No tasks to do!</p>
     {{/each}}
+    <!--<script>-->
+        <!--var date = new Date();-->
+        <!--document.getElementById("dateCreated").innerHTML = date.toLocaleDateString();-->
+    <!--</script>-->
 </div>
 <div class="alldone">
     {{#if tasks}}

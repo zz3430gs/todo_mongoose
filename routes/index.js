@@ -26,7 +26,7 @@ router.post('/add', function (req, res, next) {
       //Insert into database. New task are assumed to be not complete
 
       //Create a new Task, an instance of the Task schema, and call save()
-      new Task({text: req.body.text, completed: false}).save()
+      new Task({text: req.body.text, completed: false, dateCreated: new Date()}).save()
         .then((newTask)=>{
           console.log('The new task created is: ', newTask);
           res.redirect('/');
@@ -40,7 +40,7 @@ router.post('/add', function (req, res, next) {
 /* POST task done */
 router.post('/done', function (req, res, next) {
 
-    Task.findOneAndUpdate({_id: req.body._id}, {$set : {completed: true}})
+    Task.findOneAndUpdate({_id: req.body._id}, {$set : {completed: true, dateCompleted: new Date()}})
         .then((updatedTask)=>{
         //count how many things were updated. Expect to be 1.
         if (updatedTask){ //updatedTask is the document *before* the update
@@ -69,9 +69,9 @@ router.post('/done', function (req, res, next) {
  /* POST task delete */
  router.post('/delete', function(req, res, next){
 
-     Task.deleteOne({_id : ObjectID(req.body._id)})
+     Task.deleteOne({_id : req.body._id})
          .then((result)=>{
-             if (result.lastErrorObject.n === 1){
+             if (result.deletedCount === 1){
                  res.redirect('/');
              }else {
                  res.status(404).send('Error deleting task: not found');
@@ -110,5 +110,17 @@ router.get('/task/:_id', function(req, res, next){
         .catch((err) =>{
             next(err);
         })
+});
+
+/* POST delete all task that are done */
+router.post('/deletedone', function (req, res, next) {
+   Task.deleteMany({completed: true})
+       .then((docs)=> {
+           req.flash('info', 'All Completed Tasks Deleted');
+           res.redirect('/');
+       })
+       .catch((err)=>{
+            next(err);
+       })
 });
 module.exports = router;
