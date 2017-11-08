@@ -19,7 +19,7 @@ var db_url = process.env.MONGO_URL;
 mongoose.connect(db_url, { useMongoClient: true})
     .then(()=>{ console.log('connected to mongodb')})
     .catch((err) => {console.log('error connecting to mongodb')});
-mongoose.promise = global.Promise;
+mongoose.Promise = global.Promise;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
