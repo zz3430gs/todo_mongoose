@@ -8,24 +8,27 @@ var flash = require('express-flash');
 var session = require('express-session');
 var mongoose = require('mongoose');
 var MongoDBStore = require('connect-mongodb-session')(session);
-var passport= require('passport');
+var passport = require('passport');
 var passportConfig = require('./config/passport')(passport);
 
-//var MongoClient = require('mongodb').MongoClient;
-
-var index = require('./routes/tasks');
-
-var app = express();
-
-var db_url = process.env.MONGO_URL;
-
-mongoose.connect(db_url, { useMongoClient: true})
-    .then(()=>{ console.log('connected to mongodb')})
-    .catch((err) => {console.log('error connecting to mongodb')});
-mongoose.Promise = global.Promise;
 
 var tasks = require('./routes/tasks');
 var auth = require('./routes/auth');
+
+
+//var MongoClient = require('mongodb').MongoClient;
+
+//var index = require('./routes/tasks');
+
+var db_url = process.env.MONGO_URL;
+
+mongoose.Promise = global.Promise;
+mongoose.connect(db_url, { useMongoClient: true})
+    .then(()=>{ console.log('connected to mongodb')})
+    .catch((err) => {console.log('error connecting to mongodb', err);});
+
+
+var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -37,6 +40,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
 var store = MongoDBStore({ uri: db_url, collection: 'tasks_sessions'});
 
@@ -48,35 +52,24 @@ app.use(session({
 }));
 
 app.use(passport.initialize());
-app.use(passport.sesson());
-
+app.use(passport.session());
 app.use(flash());
 
 
-app.use(express.static(path.join(__dirname, 'public')));
 
-//MongoClient.connect(db_url).then( (db) => {
-
-  // var tasks = db.collection('tasks');
-  //
-  // app.use('/', function (req, res, next) {
-  //     req.tasks = tasks;
-  //     next();
-  // });
-
-  app.use('/auth', auth);
-  app.use('/', tasks);
+app.use('/auth', auth); //order matters
+app.use('/', tasks);
 
 
   // catch 404 and forward to error handler
-  app.use(function(req, res, next) {
+app.use(function(req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
     next(err);
   });
 
   // error handler
-  app.use(function(err, req, res, next) {
+app.use(function(err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
