@@ -7,10 +7,13 @@ var bodyParser = require('body-parser');
 var flash = require('express-flash');
 var session = require('express-session');
 var mongoose = require('mongoose');
+var MongoDBStore = require('connect-mongodb-session')(session);
+var passport= require('passport');
+var passportConfig = require('./config/passport')(passport);
 
 //var MongoClient = require('mongodb').MongoClient;
 
-var index = require('./routes/index');
+var index = require('./routes/tasks');
 
 var app = express();
 
@@ -20,6 +23,9 @@ mongoose.connect(db_url, { useMongoClient: true})
     .then(()=>{ console.log('connected to mongodb')})
     .catch((err) => {console.log('error connecting to mongodb')});
 mongoose.Promise = global.Promise;
+
+var tasks = require('./routes/tasks');
+var auth = require('./routes/auth');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -31,10 +37,23 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({secret: 'top secret', resave : false, saveUninitialized: false}));
+var store = MongoDBStore({ uri: db_url, collection: 'tasks_sessions'});
+
+app.use(session({
+    secret: 'top secret',
+    resave : true,
+    saveUninitialized: true,
+    store: store
+}));
+
+app.use(passport.initialize());
+app.use(passport.sesson());
+
 app.use(flash());
+
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 //MongoClient.connect(db_url).then( (db) => {
 
@@ -45,7 +64,9 @@ app.use(flash());
   //     next();
   // });
 
-  app.use('/', index);
+  app.use('/auth', auth);
+  app.use('/', tasks);
+
 
   // catch 404 and forward to error handler
   app.use(function(req, res, next) {
