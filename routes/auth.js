@@ -28,9 +28,3 @@ router.get('/logout', function (req, res, next) {
 });
 
 module.exports = router;
-
-//https://frozen-mesa-86216.herokuapp.com/ - astropix
-
-//https://github.com/zz3430gs/astropix
-
-//https://github.com/zz3430gs/favorite_color_app_auth

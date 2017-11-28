@@ -15,11 +15,6 @@ var passportConfig = require('./config/passport')(passport);
 var tasks = require('./routes/tasks');
 var auth = require('./routes/auth');
 
-
-//var MongoClient = require('mongodb').MongoClient;
-
-//var index = require('./routes/tasks');
-
 var db_url = process.env.MONGO_URL;
 
 mongoose.Promise = global.Promise;
@@ -42,6 +37,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+//Create mongodb collections and save to mongo
 var store = MongoDBStore({ uri: db_url, collection: 'tasks_sessions'});
 
 app.use(session({
